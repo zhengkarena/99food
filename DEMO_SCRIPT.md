@@ -178,6 +178,35 @@ The chips below the segment description make this concrete:
 - **At 4:30**: skip the Keeta what-if (Action 3 of Module 4)
 - **At 5:00**: skip the close speech; the upload demo IS the close
 
+## If GM asks: "这种工具能 productize 吗？"
+
+A 90-second answer. Memorize the structure, vary the wording. Don't read it.
+
+> **(0–20s) 现状定位**
+> "现在你看到的是个单机 demo——所有数据要么是公开数据（IBGE 2022 / Reuters /
+> 媒体）、要么是来自我自己的研究估算、要么是 GM 你上传进来的 CSV。它跑在
+> 浏览器里，没后端，30 秒部署到 Vercel。"
+
+> **(20–50s) 落地路径**
+> "真正接入团队需要做三件事：(1) 把上传的 CSV 接口换成 99Food 内部
+> BI 数据源——schema 我已经验证过兼容性，这就是为什么我设计了 cities.csv
+> 这套 schema；(2) 把 elasticity k 值从行业先验切到 99Food 真实 A/B 数据，
+> 现在 refit 算法已经在工具里跑通了；(3) 加一层简单的权限和审计日志。"
+
+> **(50–80s) 时间表**
+> "我估算 6 周可以做出一个让 pilot 团队内部使用的版本：第 1–2 周接数据
+> pipeline，第 3–4 周加权限+审计，第 5 周内部联调，第 6 周对接 4–5 个
+> 城市策略 PM 试用。我自己来做这个 productization 没问题。"
+
+> **(80–90s) 收尾**
+> "工具的灵魂不在代码，在它把'市场重要性 vs 进入优先级'、
+> '甜点补贴 vs 行业现实'、'飞轮启动 vs 盈亏平衡'这三组对比框架做出来了。
+> 这些框架接哪份数据都成立。代码只是把它们做成了可交互的形式。"
+
+**Key beats**: 现状 → 落地 3 步 → 6 周时间表 → 框架不依赖代码。
+Don't get pulled into "but how do we handle X edge case" — pivot back:
+"这是上线后第一周做的，不是 demo 阶段做的。"
+
 ## If GM interrupts with questions
 
 Each module has anticipated answers built in:

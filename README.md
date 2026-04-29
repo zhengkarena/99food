@@ -5,6 +5,19 @@ question:
 
 > Given any Brazilian city, should 99Food enter, when, how, and will it pay back?
 
+## Why this tool
+
+It's not a BI dashboard — dashboards report **what happened**. This tool models
+**what to decide next**: weighted city scoring, marginal-decay subsidy
+simulation, auto-generated entry briefs, and a 90-day flywheel forecast that
+contrasts three strategies against a What-if-Keeta defensive scenario.
+
+The headline insight, surfaced live in the forecast module on a Tier-A city:
+
+> **More spend ≠ faster ignition.** Goiânia-replica reaches flywheel
+> self-sustainment on Day 48 with R$0.97M; Aggressive needs 2.6× the budget
+> and ignites 18 days later. Density beats cash.
+
 ## Quick start
 
 ```bash
