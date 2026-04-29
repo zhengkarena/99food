@@ -38,74 +38,227 @@ function decideVerdict(city) {
   return 'hold';
 }
 
-/** Pick the top RFM segments for this city, ordered by ROI fit. */
+/**
+ * RFM segment ladder — branches into 5 city archetypes so the GM never
+ * sees the same brief twice. The "high-value retention" tail (non-price
+ * retention via membership / SLA / dedicated CS) is preserved across all
+ * archetypes — it's a universal truth about k=0.15 + organic 70%.
+ *
+ *   Archetype 1: keetaPresent          → defensive: dormant recall first
+ *   Archetype 2: launched + ifood>82   → red-ocean: price-sensitive first
+ *   Archetype 3: launched + Tier A/B   → pilot:    new-user funnel first
+ *   Archetype 4: !launched + entry≥50  → cold:     activation first
+ *   Archetype 5: default (hold/watch)  → minimal:  small budget, observe
+ */
 function segmentLadder(city) {
-  // Lower-AOV cities favour price-sensitive + new-user-first.
-  // Higher-AOV cities favour second-order habit + selective high-value.
-  const lowAOV = city.avgMealPrice <= 50;
-  const tourismBent = /tourism|beach|hub/i.test(city.note ?? '');
-
-  const ladder = [
-    {
-      segment: 'New user · first order',
-      rationale: '最高弹性 (k=0.60)，组件零自然转化——补贴每 R$ 都是真增量。',
-      priority: 1,
-    },
-    {
-      segment: lowAOV ? 'Price-sensitive segment' : 'New user · second order',
-      rationale: lowAOV
-        ? '低 AOV 城市价格敏感人群密度高，二阶 ROI 仅次于首单。'
-        : '高 AOV 城市重点是把首单用户转成习惯，二阶 k=0.45 仍可观。',
-      priority: 2,
-    },
-    {
-      segment: 'Dormant · silent recall',
-      rationale: '已接触过但流失的用户，唤回成本低于纯新客。',
-      priority: 3,
-    },
-  ];
-  if (tourismBent) {
-    ladder.splice(2, 0, {
-      segment: 'Tourist & weekend bursts',
-      rationale: '旅游城周末峰值需求 30%+，专门人群预算独立配比。',
-      priority: 2.5,
-    });
-  }
-  // Always last: high-value retention — NOT "don't invest", but "switch the form
-  // of investment". Price subsidies are wrong tool here; non-price retention is right.
-  ladder.push({
+  const highValueTail = {
     segment: 'High-value retention',
     rationale:
       '弹性 k=0.15 + 自然转化 70% —— 价格刺激 ROI 必然 < 1。' +
       '但留存依然是核心目标——通过服务体验差异化建立 switching cost，对抗 iFood 高 LTV 用户流失。',
     tactics: ['会员权益', '优先派单', '客服 SLA', '专属客服热线'],
     priority: 99,
-  });
-  return ladder;
-}
+  };
 
-function merchantRamp(city) {
-  const tier = city._tier;
-  // M1 reflects how aggressive we can be in week 1
-  const m1 = tier === 'S' ? 800 : tier === 'A' ? 500 : 300;
+  // ── Archetype 1: Contest mode — Keeta beachhead, we go IN to fight (Santos) ──
+  // For launched markets where Keeta arrived later (SP), the market is already
+  // a red-ocean iFood lock-in — route to mature archetype below.
+  if (city.keetaPresent && !city.isLaunched) {
+    return [
+      {
+        segment: 'Dormant · silent recall',
+        rationale: `${city.name} 是 Keeta 滩头，目标是抢签那些已接触过 99Food 但被 Keeta 撬走的用户。` +
+          '已注册用户切换成本最低，召回 ROI 高于纯新客。',
+        priority: 1,
+      },
+      {
+        segment: 'New user · first order',
+        rationale: '基本盘必须稳——但补贴严格卡在 sweet spot，' +
+          '不与 Keeta 比拼券额（Keeta 五年 R$5.6B 弹药 vs 我们补贴战必输）。',
+        priority: 2,
+      },
+      {
+        segment: 'Price-sensitive segment',
+        rationale: '防御性人群——最容易被 Keeta 低券额撬动。' +
+          '差异化打法：99Pay 折扣 + 99 mobility 跨业积分绑定，降低跳转概率。',
+        priority: 3,
+      },
+      highValueTail,
+    ];
+  }
+
+  // ── Archetype 2: Launched + mature iFood market (SP / Rio / BH) ────
+  if (city.isLaunched && city.ifoodShare > 82) {
+    return [
+      {
+        segment: 'Price-sensitive segment',
+        rationale: `${city.name} iFood 锁定 ${city.ifoodShare}%，是被 iFood 用补贴教育多年的红海。` +
+          '这部分用户对绝对价差敏感，是从 iFood 那里抢边际订单最容易撬动的层。',
+        priority: 1,
+      },
+      {
+        segment: 'New user · second order',
+        rationale: '复购阶梯：首单已破冰，二单决定能否进入习惯期。' +
+          'k=0.45 仍可观，是把月活转成月留存的核心节点。',
+        priority: 2,
+      },
+      {
+        segment: 'New user · first order',
+        rationale: '红海里拉新成本上升——必须严格卡在 sweet spot 精准投放，' +
+          '避免与 iFood 进入券额竞赛。',
+        priority: 3,
+      },
+      highValueTail,
+    ];
+  }
+
+  // ── Archetype 3: Launched + pilot/secondary (Goiânia / Salvador / Fortaleza) ──
+  if (city.isLaunched && (city._tier === 'A' || city._tier === 'B')) {
+    return [
+      {
+        segment: 'New user · first order',
+        rationale: `${city.name} 处于模型验证阶段——拉新单 ROI 是否符合 Goiânia 复制玩法的 sweet spot 预测，` +
+          '决定是否能 D90 跨过飞轮临界。这是 pilot 的根基。',
+        priority: 1,
+      },
+      {
+        segment: 'New user · second order',
+        rationale: '首单后 30 天内的复购窗口——习惯养成 = 飞轮启动的前置条件，' +
+          '比拉纯新客更要紧。Goiânia 45 天破百万单的核心就是这一阶。',
+        priority: 2,
+      },
+      {
+        segment: 'Dormant · silent recall',
+        rationale: '已接触过的用户唤回成本最低，pilot 阶段就要建立召回 pipeline，' +
+          '为 D90 后规模化做储备。',
+        priority: 3,
+      },
+      highValueTail,
+    ];
+  }
+
+  // ── Archetype 4: Unlaunched candidate with high entry score ────────
+  if (!city.isLaunched && (city._entryScore ?? 0) >= 50) {
+    return [
+      {
+        segment: 'New user · first order',
+        rationale: `${city.name} 是冷启动城市，零自然转化——补贴每 R$ 都是真增量。` +
+          '90 天内首单密度直接决定能否达到飞轮临界。',
+        priority: 1,
+      },
+      {
+        segment: 'Price-sensitive segment',
+        rationale: '建立"99Food = 性价比"初始心智的窗口期。' +
+          '这部分用户尚未对外卖品牌产生 lock-in，是抢先建立认知的最佳目标。',
+        priority: 2,
+      },
+      {
+        segment: 'New user · second order',
+        rationale: '冷启动后 30 天的习惯锚点——' +
+          '直接决定 D90 时自然单占比能否达 40% 飞轮临界。',
+        priority: 3,
+      },
+      highValueTail,
+    ];
+  }
+
+  // ── Archetype 5: Default — hold / watch cities, minimal-budget mode ──
   return [
     {
-      phase: 'M1',
-      window: 'Week 1–4',
+      segment: 'New user · first order',
+      rationale: `${city.name} 优先级低，预算受限——只投最高弹性人群拉首单，` +
+        '观察 30 天 ROI 决定是否继续投入。',
+      priority: 1,
+    },
+    {
+      segment: 'Dormant · silent recall',
+      rationale: '低成本召回 pipeline，配合首单券形成最小可行运营，' +
+        '保留再评估窗口。',
+      priority: 2,
+    },
+    {
+      segment: 'Price-sensitive segment',
+      rationale: '次要预算池——观察响应再决定加码或撤退。',
+      priority: 3,
+    },
+    highValueTail,
+  ];
+}
+
+/**
+ * Merchant ramp — population-scaled M1 + city-archetype-specific detail copy.
+ *
+ *   Counts:  M1 = max(50, pop / 20_000)   M2 = M1 × 2.5    M3 = M1 × 5
+ *   Display rounding: <100 → step 5;  100–999 → step 50;  ≥1000 → step 100
+ *
+ *   Detail copy varies by archetype so São Paulo doesn't read the same
+ *   "head chains as anchor" line as Florianópolis.
+ */
+function roundMerchant(n) {
+  if (n < 100)  return Math.ceil(n / 5)   * 5;
+  if (n < 1000) return Math.ceil(n / 50)  * 50;
+  return            Math.ceil(n / 100) * 100;
+}
+
+function merchantArchetype(city) {
+  // Contest = unlaunched Keeta beachhead (Santos). Launched + Keeta routes
+  // to mature: that's red-ocean defense, not beachhead attack.
+  if (city.keetaPresent && !city.isLaunched)               return 'contest';
+  if (city.isLaunched && city.ifoodShare > 82)             return 'mature';
+  if (city.isLaunched && (city._tier === 'A' || city._tier === 'B')) return 'pilot';
+  if (!city.isLaunched && (city._entryScore ?? 0) >= 50)   return 'candidate';
+  return 'minimal';
+}
+
+const MERCHANT_DETAIL = {
+  contest: {
+    m1: '防守优先：抢签 Keeta 尚未签下的头部商户，每家给 90 天免佣 + 流量保底。',
+    m2: '区域覆盖率 > 60% 是阻断 Keeta 密度的临界——不到这个数 Keeta 就有缝可钻。',
+    m3: '把 Keeta 没有的早餐 / 夜宵时段补齐，用时段差异化锁住用户日均频次。',
+  },
+  mature: {
+    m1: '红海突围靠头部连锁 + iFood 独家品牌挖角——一家麦当劳/Outback 抵 50 家长尾。',
+    m2: '密度铺开到住宅区 + 商务园，骑手接单距离从 4.5 km 降到 3.0 km 以内。',
+    m3: '飞轮启动信号：自然单占比 > 40%、配送时长稳定 < 30 分钟。',
+  },
+  pilot: {
+    m1: '复制 Goiânia 玩法：区域品牌 + 网红店 + 99 mobility 司机推荐的本地餐厅。',
+    m2: '验证完头部模型后向次商圈复制，重点观察 W4→W8 自然单增长曲线。',
+    m3: '飞轮启动信号：D90 自然单占比 ≥ 40%，准备进入下一城复制。',
+  },
+  candidate: {
+    m1: '冷启动靠区域优势商家：先签 5–10 家本地连锁做密度锚点，再用网红店带流量。',
+    m2: '随首单密度上升铺开住宅区，骑手平均接单距离 < 3.5 km 即过密度门槛。',
+    m3: '验证 Goiânia 复制玩法是否在该城市奏效——D90 自然单占比 ≥ 40% 即放量。',
+  },
+  minimal: {
+    m1: '最小可行运营：先签头部 + 高价值长尾，观察首月响应再决定追加。',
+    m2: '若 M1 ROI 达标再扩容；不达标进 risk review，重新评估进入时机。',
+    m3: '若达 D60 仍未跨密度门槛，启动撤退预案 / 重谈合作模式。',
+  },
+};
+
+function merchantRamp(city) {
+  const m1Raw = Math.max(50, Math.round(city.population / 20_000));
+  const m1 = roundMerchant(m1Raw);
+  const m2 = roundMerchant(m1Raw * 2.5);
+  const m3 = roundMerchant(m1Raw * 5);
+  const detail = MERCHANT_DETAIL[merchantArchetype(city)];
+  return [
+    {
+      phase: 'M1', window: 'Week 1–4',
       target: `${m1}+ 商户上线 · 重点 CBD 午餐 + 晚餐双高峰商圈`,
-      detail: '先签 50 家头部品牌（连锁 + 网红）作为 anchor，再放量长尾。',
+      detail: detail.m1,
     },
     {
-      phase: 'M2',
-      window: 'Week 5–8',
-      target: `${Math.round(m1 * 2.5)}+ 商户 · 拓宽至住宅区 + 商务园`,
-      detail: '密度铺开，骑手平均接单距离应从 4.5 km 降到 3.0 km 以内。',
+      phase: 'M2', window: 'Week 5–8',
+      target: `${m2}+ 商户 · 拓宽至住宅区 + 商务园`,
+      detail: detail.m2,
     },
     {
-      phase: 'M3',
-      window: 'Week 9–13',
-      target: `${Math.round(m1 * 5)}+ 商户 · 长尾 + 早餐 + 夜宵补全`,
-      detail: '飞轮启动信号：自然单量占比 > 40%、骑手时薪稳定在 R$ 25 以上。',
+      phase: 'M3', window: 'Week 9–13',
+      target: `${m3}+ 商户 · 长尾 + 早餐 + 夜宵补全`,
+      detail: detail.m3,
     },
   ];
 }
