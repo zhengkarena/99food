@@ -1,0 +1,10 @@
+segment,subsidy_amount,conversion_lift,sample_size,p_value,notes
+new_user_first,3,0.004,5000,0.001,Pilot week 1 - first-order coupon
+new_user_first,5,0.006,5000,0.001,Pilot week 2
+new_user_first,8,0.009,5000,0.001,Pilot week 3
+new_user_first,12,0.013,5000,0.001,Pilot week 4 - approaching saturation
+high_value,5,0.006,3000,0.18,Most orders are organic anyway (p > 0.05)
+high_value,12,0.014,3000,0.04,Diminishing returns
+price_sensitive,3,0.007,4000,0.001,Strong response to small subsidies
+price_sensitive,8,0.018,4000,0.001,Mid-curve
+price_sensitive,15,0.030,4000,0.001,Approaching plateau

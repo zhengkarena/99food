@@ -170,6 +170,9 @@ export function SubsidySimulator({ cities, benchmarks, selectedCityId, onSelectC
               <label className="text-xs text-ink-300">Target segment</label>
               <span className="text-[10px] font-mono text-ink-500">
                 k = <span className="text-signal">{segMeta.k.toFixed(2)}</span>
+                {segMeta._refitted && (
+                  <span className="ml-2 text-verde">● refit (n={segMeta._samples})</span>
+                )}
               </span>
             </div>
             <div className="grid grid-cols-1 gap-1.5">

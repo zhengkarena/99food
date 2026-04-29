@@ -1,0 +1,7 @@
+metric_name,value,unit,notes
+avg_order_value,55,BRL,Average order value (national)
+ifood_commission,23,%,iFood marketplace commission rate
+rider_hourly_wage,25,BRL/hr,Rider effective hourly wage
+cac_new_user,18,BRL,Cost per acquired new user
+organic_share_launched,0.35,share,Organic order share in mature city
+industry_reality_subsidy,15,BRL,Observed first-order coupon water-level

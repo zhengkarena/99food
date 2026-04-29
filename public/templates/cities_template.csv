@@ -1,0 +1,4 @@
+id,name,state,region,population,gdp_per_capita,is_launched,launch_date,keeta_present,ifood_market_share,density_99,density_potential,supply_readiness,strategic_value,avg_meal_price,lat,lng,note
+sao-paulo,São Paulo,SP,Southeast,11451245,70770,true,2025-08,true,86,92,95,95,100,62,-23.55,-46.63,Largest LatAm metro
+goiania,Goiânia,GO,Center-West,1437366,30836,true,2025-04,false,73,72,80,76,90,50,-16.69,-49.27,Pilot city - 1M orders in 45 days
+santos,Santos,SP,Southeast,418608,64740,false,,true,76,70,80,70,75,60,-23.96,-46.33,Keeta first beachhead

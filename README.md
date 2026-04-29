@@ -34,9 +34,9 @@ Deploys to Vercel out of the box (no backend; data is bundled or user-uploaded).
 | Phase | Status | What |
 |---|---|---|
 | 0 | ✅ | Data + skeleton + 4 tab placeholders |
-| 1 | ⏳ | Module 2 (subsidy ROI simulator) — the soul |
-| 2 | ⏳ | Module 1 (scorecard + radar + Brazil map) |
-| 3 | ⏳ | Module 3 (strategy brief + PDF) + CSV upload |
+| 1 | ✅ | Module 2 (subsidy ROI simulator) + Reality Gap Indicator |
+| 2 | ✅ | Module 1 (scorecard + radar + Brazil map) + Market/Entry toggle |
+| 3 | ✅ | Module 3 (strategy brief + PDF) + CSV upload (3 schemas, live refit) |
 | 4 | ⏳ | Module 4 (90-day forecast) + visual polish |
 
 ## Stack

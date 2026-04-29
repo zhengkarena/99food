@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TopNav } from './components/shared/TopNav.jsx';
 import { TabBar } from './components/shared/TabBar.jsx';
 import { CityScorecard } from './components/CityScorecard/CityScorecard.jsx';
 import { SubsidySimulator } from './components/SubsidySimulator/SubsidySimulator.jsx';
 import { StrategyGenerator } from './components/StrategyGenerator/StrategyGenerator.jsx';
 import { UnitEconomics } from './components/UnitEconomics/UnitEconomics.jsx';
+import { UploadModal } from './components/DataUpload/UploadModal.jsx';
 import { CITIES } from './data/cities.js';
 import { BENCHMARKS } from './data/benchmarks.js';
 
@@ -18,10 +19,30 @@ const TABS = [
 export default function App() {
   const [active, setActive] = useState('scorecard');
   const [selectedCityId, setSelectedCityId] = useState('fortaleza');
-  // Default vs user-uploaded data — Phase 3 will wire upload to setCities/setBenchmarks
-  const [cities] = useState(CITIES);
-  const [benchmarks] = useState(BENCHMARKS);
-  const [dataSource] = useState('Default Data');
+  const [uploadOpen, setUploadOpen] = useState(false);
+
+  // Upload overrides — null when default
+  const [customCities, setCustomCities] = useState(null);
+  const [benchmarkOverrides, setBenchmarkOverrides] = useState(null);
+  const [refittedElasticity, setRefittedElasticity] = useState(null);
+
+  // Effective data (default merged with any uploads)
+  const cities = customCities ?? CITIES;
+  const benchmarks = useMemo(() => {
+    let b = BENCHMARKS;
+    if (benchmarkOverrides) b = { ...b, ...benchmarkOverrides };
+    if (refittedElasticity) {
+      b = {
+        ...b,
+        elasticity: { ...b.elasticity, ...refittedElasticity },
+      };
+    }
+    return b;
+  }, [benchmarkOverrides, refittedElasticity]);
+
+  const dataSourceLabel = customCities || benchmarkOverrides || refittedElasticity
+    ? 'Custom Data'
+    : 'Default Data';
 
   const selectedCity = cities.find((c) => c.id === selectedCityId) ?? cities[0];
 
@@ -29,9 +50,10 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       <TopNav
         selectedCity={selectedCity}
-        dataSource={dataSource}
+        dataSource={dataSourceLabel}
         launchedCount={cities.filter((c) => c.isLaunched).length}
         target={benchmarks.food99CitiesTarget.value}
+        onUploadClick={() => setUploadOpen(true)}
       />
 
       <TabBar tabs={TABS} active={active} onChange={setActive} />
@@ -55,6 +77,7 @@ export default function App() {
         {active === 'strategy' && (
           <StrategyGenerator
             city={selectedCity}
+            cities={cities}
             benchmarks={benchmarks}
           />
         )}
@@ -69,6 +92,24 @@ export default function App() {
       <footer className="px-6 py-3 text-[10px] uppercase tracking-[0.18em] text-ink-500 font-mono border-t border-ink-700">
         99Food City Console · interview demo · data verified 2026-04-29 · see DATA_SOURCES.md
       </footer>
+
+      <UploadModal
+        isOpen={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        onCitiesUpload={setCustomCities}
+        onBenchmarksUpload={setBenchmarkOverrides}
+        onExperimentsUpload={setRefittedElasticity}
+        defaultElasticity={BENCHMARKS.elasticity}
+        avgPrice={BENCHMARKS.avgOrderValue.value}
+        hasCustomCities={!!customCities}
+        hasCustomBenchmarks={!!benchmarkOverrides}
+        hasCustomExperiments={!!refittedElasticity}
+        onResetAll={() => {
+          setCustomCities(null);
+          setBenchmarkOverrides(null);
+          setRefittedElasticity(null);
+        }}
+      />
     </div>
   );
 }

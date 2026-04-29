@@ -24,7 +24,7 @@ function quickFlywheel(c) {
   );
 }
 
-export function TopNav({ selectedCity, dataSource, launchedCount, target }) {
+export function TopNav({ selectedCity, dataSource, launchedCount, target, onUploadClick }) {
   const score = quickFlywheel(selectedCity);
   const tier = tierOf(score);
   const progressPct = Math.min(100, (launchedCount / target) * 100);
@@ -78,7 +78,7 @@ export function TopNav({ selectedCity, dataSource, launchedCount, target }) {
           <button
             type="button"
             className="flex items-center gap-1.5 text-xs text-ink-300 border border-ink-600 hover:border-signal hover:text-signal px-3 py-1.5 rounded-md transition-colors font-mono uppercase tracking-wider"
-            onClick={() => alert('Upload UI ships in Phase 3 — CSV templates already drafted.')}
+            onClick={onUploadClick}
           >
             <Upload className="w-3.5 h-3.5" />
             Upload data
@@ -86,7 +86,10 @@ export function TopNav({ selectedCity, dataSource, launchedCount, target }) {
 
           <div className="text-right">
             <div className="label-xs">Source</div>
-            <div className="text-[11px] font-mono text-ink-300 mt-1 flex items-center gap-1">
+            <div className={`text-[11px] font-mono mt-1 flex items-center gap-1 ${
+              dataSource === 'Default Data' ? 'text-ink-300' : 'text-verde'
+            }`}>
+              {dataSource === 'Custom Data' && <span className="w-1.5 h-1.5 bg-verde rounded-full" />}
               {dataSource}
               <ArrowUpRight className="w-3 h-3 text-ink-500" />
             </div>
