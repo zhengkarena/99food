@@ -37,7 +37,7 @@ Deploys to Vercel out of the box (no backend; data is bundled or user-uploaded).
 | 1 | ✅ | Module 2 (subsidy ROI simulator) + Reality Gap Indicator |
 | 2 | ✅ | Module 1 (scorecard + radar + Brazil map) + Market/Entry toggle |
 | 3 | ✅ | Module 3 (strategy brief + PDF) + CSV upload (3 schemas, live refit) |
-| 4 | ⏳ | Module 4 (90-day forecast) + visual polish |
+| 4 | ✅ | Module 4 (90-day forecast) + 3-strategy overlay + What-if Keeta + DEMO_SCRIPT |
 
 ## Stack
 

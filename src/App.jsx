@@ -106,6 +106,7 @@ export default function App() {
         {active === 'economics' && (
           <UnitEconomics
             city={selectedCity}
+            cities={cities}
             benchmarks={benchmarks}
           />
         )}
