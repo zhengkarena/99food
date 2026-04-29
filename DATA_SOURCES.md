@@ -38,15 +38,18 @@ URL anchor: <https://www.ibge.gov.br/en/cities-and-states>.
 | Investment doubled to R$2 billion | TI Inside (2025-09-15) | <https://tiinside.com.br/en/15/09/2025/99-doubles-investment-to-R$2-billion-in-99food-and-accelerates-expansion-in-Brazil/> |
 | March 2026 expansion: Fortaleza, Maceió, Porto Alegre, Sorocaba, Manaus, Brasília + others | TI Inside (2026-03-31) | <https://tiinside.com.br/en/31/03/2026/99food-arrives-in-12-cities-in-March./> |
 | Currently in 70+ cities, target 100 by mid-2026 | TI Inside (2026-03) | as above |
+| **Of the 30-city benchmark set in this tool, 15 are launched** (SP, Rio, Brasília, Salvador, Fortaleza, BH, Manaus, Curitiba, Recife, Goiânia, Porto Alegre, Campinas, Maceió, Sorocaba, Niterói). The 70+ company-wide figure includes smaller cities outside this set. | Cross-reference verified |
 | 99 (mobility) base in Brazil: 55M users / 1.5M drivers | DiDi 2025 annual report | <https://eu.36kr.com/en/p/3726781163682439> |
 
 ### A.3 — iFood market position
 
 | Fact | Source |
 |---|---|
-| Market share 87% | Measurable AI 2024; cross-confirmed by Caixin 2025 |
-| 55M active users, 350k restaurants, 1,700+ cities | iFood institutional 2024 |
-| 100M+ monthly orders (first month: Aug 2024) | Statista 2024 |
+| Market share **80%+** | Reuters 2025 (primary). Secondary-media 87% figure rejected. |
+| 55M active users | iFood institutional 2024 |
+| **400,000 restaurants** | Reuters 2025 (corrects earlier 350k figure) |
+| 1,700+ cities | iFood corporate fact sheet 2024 |
+| **120 M monthly orders** | Reuters 2025 (current; Aug-2024 was first 100M month) |
 | Commission range 12–27% (avg ≈ 23%) | Rwazi industry analysis 2025 |
 | Headquartered in Belo Horizonte (defensive stronghold) | iFood corporate filings |
 
@@ -100,14 +103,14 @@ iFood does not publish city-level share. Estimated from a two-tier rule:
 
 ```
 ifoodShare(city) =
-  82                                          // national baseline
+  80                                          // national baseline (Reuters 2025)
   + 5 if city is a state capital              // capital lock-in
   + 3 if city is in Southeast / South region  // mature delivery markets
   - 4 if 99Food has launched > 6 months ago   // erosion proxy
   - 6 if Keeta has launched in the city
 ```
 
-Anchored to the 87% national figure and bounded to [70, 90].
+Anchored to the 80% national figure and bounded to [68, 86].
 
 ### B.3 — `density99` (existing 99 mobility user density, 0–100)
 
@@ -188,14 +191,25 @@ DiDi Food Mexico playbook (2019–2024 published learnings):
 fits per-segment `k` via least-squares against `(subsidy, conversion_lift)`
 pairs and re-renders the curve labelled "k value re-fit from uploaded data".
 
-### B.8 — `cacNewUser` = R$18
+### B.8 — `cacNewUser` = R$18 (industry benchmark anchor)
+
+Triangulated from public LatAm delivery-platform CAC ranges, **not** from
+budget arithmetic (R$2B is total program spend across acquisition, restaurant
+subsidies, rider economics, technology, and operations — splitting it by an
+arbitrary %-share would be a fabricated number).
 
 ```
-DiDi committed budget       : R$2B over the program
-Estimated user-acq portion  : 50%  (rest → restaurant subsidies, rider, ops)
-Target user count by 2026   : ~55M (matches mobility-base ceiling)
-                              R$2B × 0.5 ÷ 55M ≈ R$18 / user
+LatAm delivery CAC range  : USD 3–5      // iFood / Rappi IR commentary 2022–2024
+BRL/USD                   : ≈ 5.5
+Native range              : R$ 16 – R$ 28
+99Food positioning        : conservative end of range — late-mover advantage
+                            via 99 mobility cross-sell reduces blended CAC
+Anchor                    : R$ 18
 ```
+
+This is intentionally an industry benchmark, not a closed-form derivation.
+Override path: upload `benchmarks.csv` row `cac_new_user, <value>, BRL` to
+replace at runtime.
 
 ### B.9 — `organicShareLaunched` = 35%
 

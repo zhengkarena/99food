@@ -19,9 +19,10 @@ export const BENCHMARKS = {
     estimated: false,
   },
   ifoodMarketShare: {
-    value: 87, unit: '%',
-    // SOURCE: Measurable AI / Sensor Tower / Caixin (cross-confirmed Aug 2024–Dec 2025)
-    source: 'Measurable AI 2024 + Caixin 2025',
+    value: 80, unit: '%',
+    // SOURCE: Reuters 2025 ("80%+ market share"). 87% figure from secondary
+    // media is unreliable — sticking to primary reporting.
+    source: 'Reuters 2025',
     estimated: false,
   },
   ifoodActiveUsers: {
@@ -34,9 +35,16 @@ export const BENCHMARKS = {
     source: 'iFood 2024 corporate fact sheet',
     estimated: false,
   },
+  ifoodRestaurants: {
+    value: 400_000, unit: 'restaurants',
+    // SOURCE: Reuters 2025. 350k figure was outdated.
+    source: 'Reuters 2025',
+    estimated: false,
+  },
   ifoodMonthlyOrders: {
-    value: 100, unit: 'million / month',
-    source: 'Statista 2024 (Aug 2024 first 100M month)',
+    value: 120, unit: 'million / month',
+    // SOURCE: Reuters 2025. 100M was Aug-2024 milestone; 120M is current.
+    source: 'Reuters 2025',
     estimated: false,
   },
 
@@ -48,7 +56,9 @@ export const BENCHMARKS = {
   },
   food99CitiesNow: {
     value: 70, unit: 'cities',
-    // SOURCE: TI Inside 2026-03-31 ("present in more than 70 cities")
+    // SOURCE: TI Inside 2026-03-31 ("present in more than 70 cities").
+    // NOTE: Of the 30-city benchmark set in this tool, 15 are launched.
+    // The 70+ company-wide figure includes smaller cities outside this set.
     source: 'TI Inside 2026-03',
     estimated: false,
   },
@@ -132,10 +142,14 @@ export const BENCHMARKS = {
   // ---------- Subsidy / growth assumptions ----------
   cacNewUser: {
     value: 18, unit: 'BRL / acquired user',
-    // ESTIMATED: triangulated from DiDi R$2B / 100-city / target user count
-    source: 'Estimated',
+    // ESTIMATED: industry-benchmark anchor, not budget arithmetic.
+    source: 'LatAm delivery industry benchmark',
     estimated: true,
-    derivation: 'R$2B budget × 50% on user acquisition ÷ ~55M target users over 12 months ≈ R$18',
+    derivation:
+      'LatAm food-delivery CAC range USD 3–5 (iFood / Rappi public IR commentary 2022–2024); ' +
+      'BRL/USD ≈ 5.5 → R$ 16–28 native range; R$18 sits at the conservative end, ' +
+      'reflecting 99Food late-mover discount via 99 mobility cross-sell. ' +
+      'Override via uploaded benchmarks.csv when city A/B data is available.',
   },
   targetLtvCacRatio: {
     value: 3.0, unit: 'ratio',
@@ -153,11 +167,13 @@ export const BENCHMARKS = {
   // incrementalConversion(s) = baseRate * (1 - exp(-k * s / avgPrice))
   // These k values are the SOUL of the model. UI lets user upload A/B data to refit.
   elasticity: {
-    new_user_first:    { k: 0.60, baseRate: 0.08, label: 'New user — first order' },
-    new_user_second:   { k: 0.45, baseRate: 0.12, label: 'New user — second order' },
-    price_sensitive:   { k: 0.50, baseRate: 0.18, label: 'Price-sensitive segment' },
-    silent_recall:     { k: 0.40, baseRate: 0.10, label: 'Dormant / silent recall' },
-    high_value:        { k: 0.15, baseRate: 0.32, label: 'High-value retention' },
+    // organicShare = fraction of segment that would convert WITHOUT subsidy.
+    // Cold new users → 0; loyal high-value → 0.70.
+    new_user_first:    { k: 0.60, baseRate: 0.08, organicShare: 0.00, label: 'New user — first order' },
+    new_user_second:   { k: 0.45, baseRate: 0.12, organicShare: 0.10, label: 'New user — second order' },
+    price_sensitive:   { k: 0.50, baseRate: 0.18, organicShare: 0.20, label: 'Price-sensitive segment' },
+    silent_recall:     { k: 0.40, baseRate: 0.10, organicShare: 0.05, label: 'Dormant / silent recall' },
+    high_value:        { k: 0.15, baseRate: 0.32, organicShare: 0.70, label: 'High-value retention' },
     // Source: Marketplace subsidy elasticity literature + Mexico DiDi Food playbook (2019-2024)
     // ESTIMATED. Uploadable via experiment_results.csv to refit per segment.
     _meta: { estimated: true, source: 'Industry priors; refittable' },
