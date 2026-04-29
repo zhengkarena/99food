@@ -163,6 +163,20 @@ export const BENCHMARKS = {
     derivation: '99Pay + 99 mobility user overlap ≈ 35% of orders are organic in mature city',
   },
 
+  // Industry reality water-level for first-order coupons.
+  // The point of contrasting this with the model's sweet spot:
+  // exposes that the market burns subsidy on the wrong segments,
+  // not on too-low subsidy values.
+  industryRealitySubsidy: {
+    value: 15, unit: 'BRL',
+    source: 'Public coupon observation 2024–2026 (iFood / Rappi / 99Food)',
+    estimated: true,
+    derivation:
+      'iFood / Rappi / 99Food first-order coupons publicly observed at R$10–R$20. ' +
+      'Midpoint R$15 used as the "industry reality" reference line. ' +
+      'Compare against the model\'s per-segment sweet spot to expose mis-targeted spend.',
+  },
+
   // ---------- Subsidy elasticity (k values) — drives marginal-decay curve ----------
   // incrementalConversion(s) = baseRate * (1 - exp(-k * s / avgPrice))
   // These k values are the SOUL of the model. UI lets user upload A/B data to refit.

@@ -51,6 +51,11 @@ export function SubsidySimulator({ cities, benchmarks, selectedCityId, onSelectC
     () => buildInsights({ city, segment: { ...segMeta, label: segmentLabel }, current, sweet }),
     [city, segMeta, segmentLabel, current, sweet]
   );
+  const industryReality = benchmarks.industryRealitySubsidy.value;
+  // Reality-gap is the wow callout: only when slider is near industry water-level
+  // AND the model has a viable sweet spot to contrast against.
+  const showRealityGap = sweet?.viable && Math.abs(subsidy - industryReality) <= 3;
+  const gap = industryReality - (sweet?.sweetSubsidy ?? 0);
 
   const realPct = current.totalOrders > 0
     ? (current.incrementalOrders / current.totalOrders) * 100 : 0;
@@ -66,6 +71,7 @@ export function SubsidySimulator({ cities, benchmarks, selectedCityId, onSelectC
             currentSubsidy={subsidy}
             sweet={sweet}
             segmentLabel={segmentLabel}
+            industryReality={industryReality}
           />
         </div>
 
@@ -116,6 +122,28 @@ export function SubsidySimulator({ cities, benchmarks, selectedCityId, onSelectC
             <span>{Math.round(current.cannibalisedOrders).toLocaleString()} would have ordered anyway</span>
           </div>
         </div>
+
+        {/* Reality-gap callout — fires when slider is at industry water-level */}
+        {showRealityGap && (
+          <div className="panel p-4 border-2 border-alert/60 bg-alert/5">
+            <div className="flex items-start gap-3">
+              <span className="text-lg leading-none">🎯</span>
+              <div className="text-sm text-ink-100 leading-relaxed">
+                <span className="font-mono text-alert">行业现实补贴 R${industryReality}</span>
+                <span className="text-ink-400"> vs </span>
+                <span className="font-mono text-verde">模型理论甜点 R${sweet.sweetSubsidy.toFixed(2)}</span>
+                <div className="mt-2 text-ink-300">
+                  差距 <span className="num text-alert">R${gap.toFixed(2)}</span>，意味着：行业每发 1 单 R${industryReality} 券，
+                  有 <span className="num text-alert">R${gap.toFixed(2)}</span> 是花在
+                  「本来就会转化的人 + 边际递减区」。
+                </div>
+                <div className="mt-2 text-ink-200">
+                  核心问题不是要不要补贴，是<span className="text-signal">补贴打偏了人群</span>。
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Insights */}
         <div className="space-y-2">

@@ -12,7 +12,7 @@ import {
  *  Pulsing dot = current subsidy position (user-controlled).
  *  Vertical reference line = sweet spot (∂ROI/∂s = 1).
  */
-export function SubsidyCurve({ data, currentSubsidy, sweet, segmentLabel }) {
+export function SubsidyCurve({ data, currentSubsidy, sweet, segmentLabel, industryReality }) {
   const current = useMemo(() => {
     // Find nearest sample to current subsidy for tooltip dot
     return data.reduce((best, p) =>
@@ -96,6 +96,24 @@ export function SubsidyCurve({ data, currentSubsidy, sweet, segmentLabel }) {
             />
           )}
 
+          {/* Industry reality water-level reference */}
+          {industryReality != null && (
+            <ReferenceLine
+              yAxisId="cum"
+              x={industryReality}
+              stroke="#E63946"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+              label={{
+                value: `Industry reality · R$${industryReality}`,
+                position: 'insideTopRight',
+                fill: '#FF6B75',
+                fontFamily: 'JetBrains Mono',
+                fontSize: 10,
+              }}
+            />
+          )}
+
           <Area
             yAxisId="cum"
             type="monotone"
@@ -142,6 +160,11 @@ export function SubsidyCurve({ data, currentSubsidy, sweet, segmentLabel }) {
           <span className="flex items-center gap-1.5">
             <span className="inline-block w-2 h-2 bg-verde rounded-full" /> Sweet spot
           </span>
+          {industryReality != null && (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2 h-2 bg-alert rounded-full" /> Industry reality
+            </span>
+          )}
         </div>
         <div className="text-ink-500">Segment: <span className="text-ink-300">{segmentLabel}</span></div>
       </div>
