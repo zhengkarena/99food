@@ -52,10 +52,10 @@ export function SubsidySimulator({ cities, benchmarks, selectedCityId, onSelectC
     [city, segMeta, segmentLabel, current, sweet]
   );
   const industryReality = benchmarks.industryRealitySubsidy.value;
-  // Reality-gap is the wow callout: only when slider is near industry water-level
-  // AND the model has a viable sweet spot to contrast against.
-  const showRealityGap = sweet?.viable && Math.abs(subsidy - industryReality) <= 3;
+  // Reality gap is now resident — visible at every subsidy level. Copy adapts
+  // by zone so the insight lands no matter where the slider stops.
   const gap = industryReality - (sweet?.sweetSubsidy ?? 0);
+  const showRealityGap = sweet?.viable;          // hide only when uneconomic at any subsidy
 
   const realPct = current.totalOrders > 0
     ? (current.incrementalOrders / current.totalOrders) * 100 : 0;
@@ -123,23 +123,20 @@ export function SubsidySimulator({ cities, benchmarks, selectedCityId, onSelectC
           </div>
         </div>
 
-        {/* Reality-gap callout — fires when slider is at industry water-level */}
+        {/* Reality-gap callout — resident; copy adapts to slider zone */}
         {showRealityGap && (
           <div className="panel p-4 border-2 border-alert/60 bg-alert/5">
             <div className="flex items-start gap-3">
               <span className="text-lg leading-none">🎯</span>
-              <div className="text-sm text-ink-100 leading-relaxed">
+              <div className="text-sm text-ink-100 leading-relaxed flex-1">
                 <span className="font-mono text-alert">行业现实补贴 R${industryReality}</span>
                 <span className="text-ink-400"> vs </span>
                 <span className="font-mono text-verde">模型理论甜点 R${sweet.sweetSubsidy.toFixed(2)}</span>
-                <div className="mt-2 text-ink-300">
-                  差距 <span className="num text-alert">R${gap.toFixed(2)}</span>，意味着：行业每发 1 单 R${industryReality} 券，
-                  有 <span className="num text-alert">R${gap.toFixed(2)}</span> 是花在
-                  「本来就会转化的人 + 边际递减区」。
-                </div>
-                <div className="mt-2 text-ink-200">
-                  核心问题不是要不要补贴，是<span className="text-signal">补贴打偏了人群</span>。
-                </div>
+                <RealityGapBody
+                  subsidy={subsidy}
+                  industryReality={industryReality}
+                  gap={gap}
+                />
               </div>
             </div>
           </div>
@@ -349,6 +346,40 @@ function KpiPanel({ label, value, sub, tone }) {
       </div>
       <div className="text-[11px] font-mono text-ink-500 mt-1">{sub}</div>
     </div>
+  );
+}
+
+function RealityGapBody({ subsidy, industryReality, gap }) {
+  // Three zones around the slider — copy lands wherever the user stops.
+  if (subsidy < 5) {
+    return (
+      <div className="mt-2 text-ink-300">
+        你当前在<span className="text-verde">甜点附近</span>，但行业实际发 <span className="num text-alert">R${industryReality}</span>。
+        意味着<span className="text-signal">大部分对手都在 reality gap 里烧钱</span>——
+        这是 99Food 的反向套利空间。
+      </div>
+    );
+  }
+  if (subsidy < 12) {
+    return (
+      <div className="mt-2 text-ink-300">
+        你当前在 <span className="text-signal">gap 中段</span>。继续往上每 R$1 边际收益递减明显，
+        而行业还在 <span className="num text-alert">R${industryReality}</span> 水位。
+        每加一档补贴，你要先回答："这单是真增量，还是给了本来就会下单的人？"
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="mt-2 text-ink-300">
+        差距 <span className="num text-alert">R${gap.toFixed(2)}</span>，意味着：行业每发 1 单 R${industryReality} 券，
+        有 <span className="num text-alert">R${gap.toFixed(2)}</span> 是花在
+        「本来就会转化的人 + 边际递减区」。
+      </div>
+      <div className="mt-2 text-ink-200">
+        核心问题不是要不要补贴，是<span className="text-signal">补贴打偏了人群</span>。
+      </div>
+    </>
   );
 }
 

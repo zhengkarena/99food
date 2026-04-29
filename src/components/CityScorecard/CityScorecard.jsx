@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Sparkles } from 'lucide-react';
 import { DEFAULT_WEIGHTS } from '../../data/cities.js';
 import { rankCities, RECOMMENDATION_META } from '../../utils/scoring.js';
 import { BrazilMap } from './BrazilMap.jsx';
@@ -10,6 +11,8 @@ const DEFAULT_COMPARE = ['goiania', 'sao-paulo', 'fortaleza'];
 export function CityScorecard({ cities, selectedCityId, onSelectCity }) {
   const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
   const [compareIds, setCompareIds] = useState(DEFAULT_COMPARE);
+  // 'importance' = market size first | 'priority' = next-wave entry candidates first
+  const [viewMode, setViewMode] = useState('importance');
 
   // Normalise weights at score time so sliders feel free but total stays 1
   const normalisedWeights = useMemo(() => {
@@ -19,10 +22,20 @@ export function CityScorecard({ cities, selectedCityId, onSelectCity }) {
     );
   }, [weights]);
 
-  const ranked = useMemo(
+  const baseRanked = useMemo(
     () => rankCities(cities, normalisedWeights),
     [cities, normalisedWeights]
   );
+
+  // Re-sort by active view mode without recomputing scores
+  const ranked = useMemo(() => {
+    if (viewMode === 'priority') {
+      return [...baseRanked].sort((a, b) => b._entryScore - a._entryScore);
+    }
+    return baseRanked;
+  }, [baseRanked, viewMode]);
+
+  const activeScoreOf = (c) => viewMode === 'priority' ? c._entryScore : c._flywheelScore;
 
   const compareCities = compareIds
     .map((id) => ranked.find((c) => c.id === id))
@@ -43,19 +56,41 @@ export function CityScorecard({ cities, selectedCityId, onSelectCity }) {
     });
   }
 
+  const launchedTopRatio = useMemo(() => {
+    // % of Tier-S/A cities (in flywheel-score view) that are already launched
+    const topTier = baseRanked.filter((c) => c._tier === 'S' || c._tier === 'A');
+    if (topTier.length === 0) return 0;
+    return Math.round((topTier.filter((c) => c.isLaunched).length / topTier.length) * 100);
+  }, [baseRanked]);
+
   return (
     <div className="grid grid-cols-12 gap-5">
       {/* ───── LEFT COLUMN: map + weights ───── */}
       <div className="col-span-7 space-y-5">
-        {/* Analyst note */}
-        <div className="panel p-4">
-          <div className="label-xs mb-2">分析师批注</div>
-          <p className="text-sm text-ink-200 leading-relaxed">
-            飞轮指数 = 6 维加权（市场规模 / 99 已有基础 / 密度潜力 / 竞争空间 / 供给就绪 / 战略价值）。
-            权重默认按 99Food 复盘 Goiânia 的成功模型（Density + Strategic 加重）。
-            拖动右侧权重滑块——你会看到 <span className="text-signal">Goiânia 一直在 Tier S</span>，
-            而 <span className="text-alert">São Paulo 在 Keeta 在场后排名下滑</span>，这就是策略工具的价值。
-          </p>
+        {/* View-mode toggle + mode-aware analyst note */}
+        <div className="panel p-4 border-l-4 border-l-signal">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-signal" />
+              <span className="label-xs">分析师批注 · {viewMode === 'priority' ? 'Entry Priority' : 'Market Importance'}</span>
+            </div>
+            <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+          </div>
+
+          {viewMode === 'importance' ? (
+            <p className="text-sm text-ink-200 leading-relaxed">
+              飞轮指数 = 6 维加权（市场规模 / 99 已有基础 / 密度潜力 / 竞争空间 / 供给就绪 / 战略价值）。
+              当前视图按"<span className="text-signal">市场重要性</span>"排序——SP / Rio 排在最前。
+              但市场大 ≠ 该先进——切到 <span className="text-signal">Entry Priority</span> 看下一波该进哪里。
+            </p>
+          ) : (
+            <p className="text-sm text-ink-200 leading-relaxed">
+              99Food 已吃下 Tier S/A 的 <span className="num text-signal">{launchedTopRatio}%</span> 高分城。
+              下一波扩张的核心问题不是"选最好的城"，而是<span className="text-signal">在 Tier B 里识别能跑出密度的城</span>。
+              Entry Priority 在飞轮分基础上扣减「已上线 −15 / Keeta 在场 −10 / iFood 锁定 &gt;82% −8 / 顶 3 metro −5」，
+              本工具用 Tier B + 未上线作为 Enter 候选筛选条件。
+            </p>
+          )}
         </div>
 
         <BrazilMap
@@ -106,7 +141,7 @@ export function CityScorecard({ cities, selectedCityId, onSelectCity }) {
                   </select>
                   {c && (
                     <div className="mt-1 flex items-baseline justify-between">
-                      <span className="num text-base">{c._score}</span>
+                      <span className="num text-base">{activeScoreOf(c)}</span>
                       <span className="text-[10px] font-mono text-ink-500">Tier {c._tier}</span>
                     </div>
                   )}
@@ -119,7 +154,9 @@ export function CityScorecard({ cities, selectedCityId, onSelectCity }) {
         {/* Ranking table */}
         <div className="panel p-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="label-xs">Top 30 · ranked live</div>
+            <div className="label-xs">
+              Top 30 · {viewMode === 'priority' ? 'Entry Priority' : 'Market Importance'}
+            </div>
             <div className="text-[10px] font-mono text-ink-500">
               {ranked.filter((c) => c._tier === 'S').length} S ·
               {' '}{ranked.filter((c) => c._tier === 'A').length} A ·
@@ -133,7 +170,9 @@ export function CityScorecard({ cities, selectedCityId, onSelectCity }) {
                 <tr className="border-b border-ink-700">
                   <th className="text-left py-2 w-8">#</th>
                   <th className="text-left py-2">City</th>
-                  <th className="text-right py-2 w-12">Score</th>
+                  <th className="text-right py-2 w-14">
+                    {viewMode === 'priority' ? 'Priority' : 'Score'}
+                  </th>
                   <th className="text-right py-2 w-10">Tier</th>
                   <th className="text-right py-2 w-16">Status</th>
                 </tr>
@@ -154,7 +193,7 @@ export function CityScorecard({ cities, selectedCityId, onSelectCity }) {
                         {c.state} · {(c.population / 1_000_000).toFixed(2)}M
                       </div>
                     </td>
-                    <td className="py-2 text-right num">{c._score}</td>
+                    <td className="py-2 text-right num">{activeScoreOf(c)}</td>
                     <td className="py-2 text-right">
                       <TierPill tier={c._tier} />
                     </td>
@@ -173,6 +212,31 @@ export function CityScorecard({ cities, selectedCityId, onSelectCity }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ViewToggle({ viewMode, onChange }) {
+  const opts = [
+    { id: 'importance', label: 'Market Importance' },
+    { id: 'priority',   label: 'Entry Priority' },
+  ];
+  return (
+    <div className="inline-flex border border-ink-700 rounded-md overflow-hidden">
+      {opts.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          onClick={() => onChange(o.id)}
+          className={`px-3 py-1 text-[11px] font-mono uppercase tracking-wider transition-colors ${
+            viewMode === o.id
+              ? 'bg-signal text-ink-950'
+              : 'bg-transparent text-ink-300 hover:text-ink-100'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
     </div>
   );
 }

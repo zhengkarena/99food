@@ -84,18 +84,54 @@ export const RECOMMENDATION_META = {
   hold:     { label: 'Hold',        color: '#3A3F4B', tone: 'dim'    },
 };
 
-/** Rank all cities by score, returning attached _score and _tier fields. */
+/**
+ * Entry Priority score — adjusts flywheel score for *next-wave entry decision*.
+ * Penalises hard-to-win or already-won cities so unlaunched Tier-B candidates
+ * (Florianópolis / Ribeirão Preto / Uberlândia) surface to the top.
+ *
+ *   entryScore = flywheelScore
+ *     − 15 if isLaunched              // already in — no entry decision
+ *     − 10 if keetaPresent             // contested = expensive density war
+ *     −  8 if ifoodShare > 82          // mature lock-in = harder erosion
+ *     −  5 if popRank ≤ 3              // top metros (SP/Rio/Brasília):
+ *                                          highest cost, slowest payback,
+ *                                          fight there only after density wins
+ */
+export function entryScore(city, baseScore, popRank) {
+  let s = baseScore;
+  if (city.isLaunched)        s -= 15;
+  if (city.keetaPresent)      s -= 10;
+  if (city.ifoodShare > 82)   s -=  8;
+  if (popRank <= 3)           s -=  5;
+  return Math.max(0, Math.round(s * 10) / 10);
+}
+
+/**
+ * Rank all cities — returns attached _flywheelScore + _entryScore + _tier.
+ * Default sort is by flywheelScore (Market Importance view); the consumer
+ * can resort by _entryScore for the Entry Priority view.
+ */
 export function rankCities(cities, weights) {
+  // Pre-compute population rank (1 = largest) for the entry-score penalty
+  const popRanks = new Map(
+    [...cities].sort((a, b) => b.population - a.population)
+               .map((c, i) => [c.id, i + 1])
+  );
+
   return cities
     .map((c) => {
-      const score = flywheelScore(c, weights);
+      const fly = flywheelScore(c, weights);
+      const entry = entryScore(c, fly, popRanks.get(c.id));
       return {
         ...c,
-        _score: score,
-        _tier: tierOf(score),
+        _flywheelScore: fly,
+        _entryScore: entry,
+        _score: fly,                                   // back-compat alias
+        _tier: tierOf(fly),                            // tier always reflects flywheel
+        _popRank: popRanks.get(c.id),
         _components: componentScores(c),
-        _recommendation: recommendation(c, score),
+        _recommendation: recommendation(c, fly),
       };
     })
-    .sort((a, b) => b._score - a._score);
+    .sort((a, b) => b._flywheelScore - a._flywheelScore);
 }
