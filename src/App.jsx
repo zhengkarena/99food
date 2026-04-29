@@ -6,8 +6,28 @@ import { SubsidySimulator } from './components/SubsidySimulator/SubsidySimulator
 import { StrategyGenerator } from './components/StrategyGenerator/StrategyGenerator.jsx';
 import { UnitEconomics } from './components/UnitEconomics/UnitEconomics.jsx';
 import { UploadModal } from './components/DataUpload/UploadModal.jsx';
+import { UploadResultPanel } from './components/DataUpload/UploadResultPanel.jsx';
 import { CITIES } from './data/cities.js';
 import { BENCHMARKS } from './data/benchmarks.js';
+
+/** Snapshot what changed between default and uploaded city dataset. */
+function diffCities(before, after) {
+  const beforeIds = new Set(before.map((c) => c.id));
+  const afterIds = new Set(after.map((c) => c.id));
+  const added = [...afterIds].filter((id) => !beforeIds.has(id)).length;
+  const removed = [...beforeIds].filter((id) => !afterIds.has(id)).length;
+  // count rows where any tracked numeric field differs
+  const FIELDS = ['population', 'gdpPerCapita', 'ifoodShare', 'density99',
+                  'densityPotential', 'supplyReadiness', 'strategicValue', 'avgMealPrice'];
+  const beforeMap = new Map(before.map((c) => [c.id, c]));
+  let changed = 0;
+  after.forEach((c) => {
+    const orig = beforeMap.get(c.id);
+    if (!orig) return;
+    if (FIELDS.some((f) => orig[f] !== c[f])) changed += 1;
+  });
+  return { before: before.length, after: after.length, changed, added, removed };
+}
 
 const TABS = [
   { id: 'scorecard',  label: '01 · City Scorecard',     hint: 'Flywheel ranking' },
@@ -25,6 +45,8 @@ export default function App() {
   const [customCities, setCustomCities] = useState(null);
   const [benchmarkOverrides, setBenchmarkOverrides] = useState(null);
   const [refittedElasticity, setRefittedElasticity] = useState(null);
+  // Floating result panel — bottom-right, 8s auto-dismiss
+  const [uploadResult, setUploadResult] = useState(null);
 
   // Effective data (default merged with any uploads)
   const cities = customCities ?? CITIES;
@@ -96,9 +118,49 @@ export default function App() {
       <UploadModal
         isOpen={uploadOpen}
         onClose={() => setUploadOpen(false)}
-        onCitiesUpload={setCustomCities}
-        onBenchmarksUpload={setBenchmarkOverrides}
-        onExperimentsUpload={setRefittedElasticity}
+        onCitiesUpload={(newCities) => {
+          setCustomCities(newCities);
+          setUploadResult({
+            kind: 'cities',
+            summary: diffCities(CITIES, newCities),
+            ts: Date.now(),
+            linkTo: 'scorecard',
+            linkLabel: 'See updated rankings →',
+          });
+        }}
+        onBenchmarksUpload={(overrides) => {
+          setBenchmarkOverrides(overrides);
+          setUploadResult({
+            kind: 'benchmarks',
+            diffs: Object.entries(overrides).map(([key, override]) => ({
+              key,
+              before: BENCHMARKS[key]?.value,
+              after: override.value,
+              unit: override.unit,
+            })),
+            ts: Date.now(),
+            linkTo: 'subsidy',
+            linkLabel: 'See updated ROI curves →',
+          });
+        }}
+        onExperimentsUpload={(refitted) => {
+          setRefittedElasticity(refitted);
+          const refits = {};
+          Object.entries(refitted).forEach(([seg, m]) => {
+            refits[seg] = {
+              before: BENCHMARKS.elasticity[seg].k,
+              after: m.k,
+              n: m._samples,
+            };
+          });
+          setUploadResult({
+            kind: 'experiments',
+            refits,
+            ts: Date.now(),
+            linkTo: 'subsidy',
+            linkLabel: 'See updated curves in Subsidy ROI →',
+          });
+        }}
         defaultElasticity={BENCHMARKS.elasticity}
         avgPrice={BENCHMARKS.avgOrderValue.value}
         hasCustomCities={!!customCities}
@@ -108,7 +170,14 @@ export default function App() {
           setCustomCities(null);
           setBenchmarkOverrides(null);
           setRefittedElasticity(null);
+          setUploadResult(null);
         }}
+      />
+
+      <UploadResultPanel
+        result={uploadResult}
+        onClose={() => setUploadResult(null)}
+        onNavigate={setActive}
       />
     </div>
   );

@@ -71,10 +71,14 @@ function segmentLadder(city) {
       priority: 2.5,
     });
   }
-  // Always last: high-value retention with a warning, NOT a recommendation
+  // Always last: high-value retention — NOT "don't invest", but "switch the form
+  // of investment". Price subsidies are wrong tool here; non-price retention is right.
   ladder.push({
     segment: 'High-value retention',
-    rationale: '⚠ k=0.15，70% 自然转化——任何首单券形式补贴都是浪费。改用积分 / 会员。',
+    rationale:
+      '弹性 k=0.15 + 自然转化 70% —— 价格刺激 ROI 必然 < 1。' +
+      '但留存依然是核心目标——通过服务体验差异化建立 switching cost，对抗 iFood 高 LTV 用户流失。',
+    tactics: ['会员权益', '优先派单', '客服 SLA', '专属客服热线'],
     priority: 99,
   });
   return ladder;

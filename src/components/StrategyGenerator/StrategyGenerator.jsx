@@ -20,18 +20,27 @@ export function StrategyGenerator({ city, benchmarks, cities }) {
   const brief = useMemo(() => generateBrief(enriched, benchmarks), [enriched, benchmarks]);
   const pdfRef = useRef(null);
 
-  function exportPDF() {
-    if (!pdfRef.current) return;
-    html2pdf()
-      .set({
-        margin: [10, 10, 10, 10],
-        filename: `99food-strategy-brief-${city.id}.pdf`,
-        image: { type: 'jpeg', quality: 0.96 },
-        html2canvas: { scale: 2, backgroundColor: '#0F1115' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      })
-      .from(pdfRef.current)
-      .save();
+  async function exportPDF() {
+    const node = pdfRef.current;
+    if (!node) return;
+    // Force white-on-black mode just for the snapshot — restore immediately after.
+    node.classList.add('pdf-export-mode');
+    // Wait one frame so the browser repaints with the new class before html2canvas reads it.
+    await new Promise((r) => requestAnimationFrame(() => r()));
+    try {
+      await html2pdf()
+        .set({
+          margin: [10, 10, 10, 10],
+          filename: `99food-strategy-brief-${city.id}.pdf`,
+          image: { type: 'jpeg', quality: 0.96 },
+          html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        })
+        .from(node)
+        .save();
+    } finally {
+      node.classList.remove('pdf-export-mode');
+    }
   }
 
   return (
@@ -132,9 +141,22 @@ function SegmentLadder({ segments }) {
             }`}>
               {s.priority === 99 ? '!' : Math.round(s.priority)}
             </span>
-            <div>
+            <div className="flex-1">
               <div className="text-sm text-ink-100 font-medium">{s.segment}</div>
               <div className="text-xs text-ink-400 leading-relaxed mt-0.5">{s.rationale}</div>
+              {s.tactics && (
+                <div className="flex gap-1.5 flex-wrap mt-2">
+                  <span className="text-[10px] uppercase tracking-wider text-verde font-mono">→ 改投</span>
+                  {s.tactics.map((t, j) => (
+                    <span
+                      key={j}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono text-verde border border-verde/40 bg-verde/5"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </li>
         ))}

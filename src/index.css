@@ -86,4 +86,55 @@
     50% { box-shadow: 0 0 0 8px rgba(255, 210, 0, 0); }
   }
   .pulse-signal { animation: signal-pulse 2s ease-in-out infinite; }
+
+  /* slide-up entry for floating result panel */
+  @keyframes slide-up {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .slide-up { animation: slide-up 220ms ease-out; }
 }
+
+/* ========== PDF EXPORT MODE ==========
+ * Temporarily applied to the strategy-brief container while html2canvas
+ * snapshots it, then removed. Goal: white background, dark text, brand
+ * yellow accents preserved, deeper greens / reds / grays for printability.
+ * Removed immediately after capture.
+ */
+.pdf-export-mode,
+.pdf-export-mode * {
+  box-shadow: none !important;
+}
+.pdf-export-mode {
+  background: #ffffff !important;
+  color: #1A1D24 !important;
+  background-image: none !important;
+  padding: 16px;
+}
+.pdf-export-mode .panel,
+.pdf-export-mode .panel-raised {
+  background: #FAFAF8 !important;
+  border-color: #D4D4D0 !important;
+}
+.pdf-export-mode .text-ink-100,
+.pdf-export-mode .text-ink-200,
+.pdf-export-mode .text-ink-300 { color: #1A1D24 !important; }
+.pdf-export-mode .text-ink-400 { color: #5A5A50 !important; }
+.pdf-export-mode .text-ink-500 { color: #8B8B7F !important; }
+.pdf-export-mode .text-signal { color: #B89700 !important; }            /* darker yellow for print */
+.pdf-export-mode .text-verde { color: #006B28 !important; }
+.pdf-export-mode .text-alert { color: #9C232C !important; }
+.pdf-export-mode .bg-signal { background: #FFD200 !important; color: #1A1D24 !important; }
+.pdf-export-mode .bg-verde\/5 { background: #EAF7EE !important; }
+.pdf-export-mode .bg-signal\/5 { background: #FFF8DC !important; }
+.pdf-export-mode .bg-alert\/5 { background: #FAEDEE !important; }
+.pdf-export-mode .bg-ink-700 { background: #E0E0DC !important; }
+.pdf-export-mode .bg-ink-800,
+.pdf-export-mode .bg-ink-900,
+.pdf-export-mode .bg-ink-950 { background: #ffffff !important; }
+.pdf-export-mode [class*="border-ink-7"],
+.pdf-export-mode [class*="border-ink-6"] { border-color: #D4D4D0 !important; }
+.pdf-export-mode [class*="border-verde"] { border-color: #006B28 !important; }
+.pdf-export-mode [class*="border-alert"] { border-color: #9C232C !important; }
+.pdf-export-mode [class*="border-signal"] { border-color: #B89700 !important; }
+.pdf-export-mode [class*="border-l-signal"] { border-left-color: #B89700 !important; }

@@ -41,18 +41,22 @@ export function UploadModal({
       const r = await parseCitiesCsv(text);
       if (!r.ok) return setErrors(r.errors);
       onCitiesUpload(r.cities);
-      setSuccess(`✓ Loaded ${r.cities.length} cities. Models recomputed.`);
+      setSuccess(`✓ Loaded ${r.cities.length} cities. Closing…`);
+      // Modal auto-closes on success — floating panel takes over with the diff.
+      setTimeout(onClose, 500);
     } else if (tab === 'benchmarks') {
       const r = await parseBenchmarksCsv(text);
       if (!r.ok) return setErrors(r.errors);
       onBenchmarksUpload(r.overrides);
-      setSuccess(`✓ Overrode ${Object.keys(r.overrides).length} benchmarks.`);
+      setSuccess(`✓ Overrode ${Object.keys(r.overrides).length} benchmarks. Closing…`);
+      setTimeout(onClose, 500);
     } else if (tab === 'experiments') {
       const r = await parseExperimentsCsv(text, defaultElasticity, avgPrice);
       if (!r.ok) return setErrors(r.errors);
       onExperimentsUpload(r.refitted);
       const keys = Object.keys(r.refitted);
-      setSuccess(`✓ Refitted k for ${keys.length} segments: ${keys.join(', ')}.`);
+      setSuccess(`✓ Refitted k for ${keys.length} segments. Closing…`);
+      setTimeout(onClose, 500);
     }
   }
 
