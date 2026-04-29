@@ -1,0 +1,169 @@
+/**
+ * 99Food City Console — business benchmarks
+ *
+ * Every value carries its source. Estimated values are flagged so the UI can show
+ * a (?) badge with the derivation. See DATA_SOURCES.md for full provenance.
+ */
+
+export const BENCHMARKS = {
+  // ---------- Market context ----------
+  brazilMarketSize2024: {
+    value: 1.29, unit: 'USD billion',
+    // SOURCE: IMARC Group "Brazil Food Delivery Market 2024–2033" (verified)
+    source: 'IMARC 2024',
+    estimated: false,
+  },
+  brazilMarketSize2033: {
+    value: 4.53, unit: 'USD billion',
+    source: 'IMARC 2024 (projection at 15.0% CAGR)',
+    estimated: false,
+  },
+  ifoodMarketShare: {
+    value: 87, unit: '%',
+    // SOURCE: Measurable AI / Sensor Tower / Caixin (cross-confirmed Aug 2024–Dec 2025)
+    source: 'Measurable AI 2024 + Caixin 2025',
+    estimated: false,
+  },
+  ifoodActiveUsers: {
+    value: 55, unit: 'million',
+    source: 'iFood institutional data 2024',
+    estimated: false,
+  },
+  ifoodCities: {
+    value: 1700, unit: 'cities',
+    source: 'iFood 2024 corporate fact sheet',
+    estimated: false,
+  },
+  ifoodMonthlyOrders: {
+    value: 100, unit: 'million / month',
+    source: 'Statista 2024 (Aug 2024 first 100M month)',
+    estimated: false,
+  },
+
+  // ---------- 99Food current state ----------
+  didi99Investment: {
+    value: 2.0, unit: 'BRL billion',
+    source: 'TI Inside 2025-09-15 (doubled from R$1B)',
+    estimated: false,
+  },
+  food99CitiesNow: {
+    value: 70, unit: 'cities',
+    // SOURCE: TI Inside 2026-03-31 ("present in more than 70 cities")
+    source: 'TI Inside 2026-03',
+    estimated: false,
+  },
+  food99CitiesTarget: {
+    value: 100, unit: 'cities by mid-2026',
+    source: 'TI Inside 2025-09-15',
+    estimated: false,
+  },
+  goianiaOrdersIn45Days: {
+    value: 1_000_000, unit: 'orders',
+    source: 'Yicai Global 2025-08 (Goiânia pilot)',
+    estimated: false,
+  },
+  spRestaurantsSigned: {
+    value: 20_000, unit: 'restaurants',
+    source: 'Global Times 2025-08 (São Paulo launch)',
+    estimated: false,
+  },
+  spRidersSigned: {
+    value: 50_000, unit: 'riders',
+    source: 'Global Times 2025-08',
+    estimated: false,
+  },
+  didiBrazilUsers: {
+    value: 55, unit: 'million riders (99 mobility)',
+    source: 'DiDi 2025 annual letter',
+    estimated: false,
+  },
+  didiBrazilDrivers: {
+    value: 1.5, unit: 'million drivers (99 mobility)',
+    source: 'DiDi 2025 annual letter',
+    estimated: false,
+  },
+
+  // ---------- Keeta competitive context ----------
+  keetaInvestment: {
+    value: 5.6, unit: 'BRL billion (5y, ≈ USD 1.1B)',
+    source: 'Bloomberg 2025-05-13',
+    estimated: false,
+  },
+  keetaLaunchCities: {
+    value: ['Santos', 'São Vicente', 'São Paulo + 8 metros'],
+    source: 'Caixin 2025-12-01',
+    estimated: false,
+  },
+  keetaCommissionMin: { value: 10, unit: '%', source: 'Rwazi blog 2025', estimated: false },
+  keetaCommissionMax: { value: 20, unit: '%', source: 'Rwazi blog 2025', estimated: false },
+
+  // ---------- Unit economics defaults (used by ROI simulator) ----------
+  avgOrderValue: {
+    value: 55, unit: 'BRL',
+    // ESTIMATED: Statista 2021 reported R$46.5; inflated ~18% to 2025
+    source: 'Statista 2021 + IPCA inflator',
+    estimated: true,
+    derivation: 'R$46.5 (Statista 2021) × 1.18 (cumulative IPCA 2021→2025)',
+  },
+  ifoodCommission: {
+    value: 23, unit: '%',
+    // SOURCE: Multiple (12-27% range; 23% representative)
+    source: 'Rwazi 2025 / industry consensus',
+    estimated: true,
+    derivation: 'Midpoint of iFood disclosed 12–27% range, weighted toward marketplace average',
+  },
+  riderHourlyWage: {
+    value: 25, unit: 'BRL/hr',
+    source: 'iFood Data Portal 2023 (R$23) + 2025 inflator',
+    estimated: true,
+    derivation: 'iFood disclosed R$23/hr (2023) × 1.09 (IPCA 2023→2025)',
+  },
+  riderMinPerOrder: {
+    value: 7.50, unit: 'BRL (motorbike)',
+    source: 'iFood May 2025 minimum-rate update',
+    estimated: false,
+  },
+  riderPerKm: {
+    value: 1.50, unit: 'BRL/km',
+    source: 'iFood May 2025',
+    estimated: false,
+  },
+
+  // ---------- Subsidy / growth assumptions ----------
+  cacNewUser: {
+    value: 18, unit: 'BRL / acquired user',
+    // ESTIMATED: triangulated from DiDi R$2B / 100-city / target user count
+    source: 'Estimated',
+    estimated: true,
+    derivation: 'R$2B budget × 50% on user acquisition ÷ ~55M target users over 12 months ≈ R$18',
+  },
+  targetLtvCacRatio: {
+    value: 3.0, unit: 'ratio',
+    source: 'SaaS / marketplace industry standard',
+    estimated: false,
+  },
+  organicShareLaunched: {
+    value: 0.35, unit: 'share',
+    source: 'Estimated from 99 mobility cross-sell baseline',
+    estimated: true,
+    derivation: '99Pay + 99 mobility user overlap ≈ 35% of orders are organic in mature city',
+  },
+
+  // ---------- Subsidy elasticity (k values) — drives marginal-decay curve ----------
+  // incrementalConversion(s) = baseRate * (1 - exp(-k * s / avgPrice))
+  // These k values are the SOUL of the model. UI lets user upload A/B data to refit.
+  elasticity: {
+    new_user_first:    { k: 0.60, baseRate: 0.08, label: 'New user — first order' },
+    new_user_second:   { k: 0.45, baseRate: 0.12, label: 'New user — second order' },
+    price_sensitive:   { k: 0.50, baseRate: 0.18, label: 'Price-sensitive segment' },
+    silent_recall:     { k: 0.40, baseRate: 0.10, label: 'Dormant / silent recall' },
+    high_value:        { k: 0.15, baseRate: 0.32, label: 'High-value retention' },
+    // Source: Marketplace subsidy elasticity literature + Mexico DiDi Food playbook (2019-2024)
+    // ESTIMATED. Uploadable via experiment_results.csv to refit per segment.
+    _meta: { estimated: true, source: 'Industry priors; refittable' },
+  },
+};
+
+// IPCA index used for inflators above (cumulative, 2021 base).
+// SOURCE: IBGE IPCA — 2021 +10.06%, 2022 +5.79%, 2023 +4.62%, 2024 +4.83% (verified)
+export const IPCA_2021_TO_2025 = 1.18;
